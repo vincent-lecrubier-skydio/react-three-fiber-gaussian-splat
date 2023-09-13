@@ -256,7 +256,7 @@ self.onmessage = (e) => {
     runSort(viewProj);
     buffer = processPlyBuffer(e.data.ply);
     vertexCount = Math.floor(buffer.byteLength / rowLength);
-    postMessage({ buffer: buffer });
+    self.postMessage({ buffer: buffer });
   } else if (e.data.buffer) {
     buffer = e.data.buffer;
     vertexCount = e.data.vertexCount;

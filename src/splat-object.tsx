@@ -1,25 +1,27 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-// import SplatSortWorker from './splat-sort-worker?worker';
+import SplatSortWorker from './splat-sort-worker?worker';
 import { fragmentShaderSource, vertexShaderSource } from './splat-shaders';
-import { NodeProps, Overwrite, Size, useThree } from '@react-three/fiber';
+import {
+  NodeProps,
+  Overwrite,
+  Size,
+  useFrame,
+  useThree,
+} from '@react-three/fiber';
 
-function computeFocalLengths(size: Size, camera: THREE.Camera) {
-  // Ensure the camera is a PerspectiveCamera
+const worker = new SplatSortWorker();
+
+const computeFocalLengths = (size: Size, camera: THREE.Camera) => {
   if (!(camera instanceof THREE.PerspectiveCamera)) {
-    console.error('The provided camera is not a THREE.PerspectiveCamera');
-    return null;
+    throw new Error('The provided camera is not a THREE.PerspectiveCamera');
   }
-  // Convert fov from degrees to radians
   const fovRad = THREE.MathUtils.degToRad(camera.fov);
-  // Calculate focal length for y-direction
-  const fy = size.height / (2 * Math.tan(fovRad / 2));
-  // Calculate horizontal field of view in radians
   const fovXRad = 2 * Math.atan(Math.tan(fovRad / 2) * camera.aspect);
-  // Calculate focal length for x-direction
+  const fy = size.height / (2 * Math.tan(fovRad / 2));
   const fx = size.width / (2 * Math.tan(fovXRad / 2));
   return new THREE.Vector2(fx, fy);
-}
+};
 
 export function Splat() {
   const ref = useRef();
@@ -28,8 +30,6 @@ export function Splat() {
 
   const [{ rawShaderMaterialData, instancedBufferGeometryData }] = useState(
     () => {
-      // const worker = new SplatSortWorker();
-
       const rawShaderMaterialData: Overwrite<
         Partial<THREE.RawShaderMaterial>,
         NodeProps<THREE.RawShaderMaterial, [THREE.ShaderMaterialParameters]>
@@ -72,33 +72,6 @@ export function Splat() {
         alphaToCoverage: true,
       };
 
-      const position = new THREE.BufferAttribute(
-        new Float32Array([1, -1, 0, 1, 1, 0, -1, -1, 0, -1, 1, 0]),
-        3
-      );
-
-      const index = new THREE.BufferAttribute(
-        new Uint16Array([0, 1, 2, 2, 3, 0]),
-        1
-      );
-
-      const color = new THREE.InstancedBufferAttribute(
-        new Float32Array([1, 0, 1, 1, 1, 1, 0, 1]),
-        4
-      );
-      const quat = new THREE.InstancedBufferAttribute(
-        new Float32Array([0, 0, 0, 1, 0, 0, 0, 1]),
-        4
-      );
-      const scale = new THREE.InstancedBufferAttribute(
-        new Float32Array([1, 1, 1, 2, 0.5, 0.5]),
-        3
-      );
-      const center = new THREE.InstancedBufferAttribute(
-        new Float32Array([0, 0, 0, 2, 0, 0]),
-        3
-      );
-
       const instancedBufferGeometryData: Overwrite<
         Partial<THREE.InstancedBufferGeometry>,
         NodeProps<
@@ -106,19 +79,124 @@ export function Splat() {
           typeof THREE.InstancedBufferGeometry
         >
       > = {
-        index,
+        index: new THREE.BufferAttribute(
+          new Uint16Array([0, 1, 2, 2, 3, 0]),
+          1
+        ),
         attributes: {
-          position: position,
-          center: center,
-          color: color,
-          quat: quat,
-          scale: scale,
+          position: new THREE.BufferAttribute(
+            new Float32Array([1, -1, 0, 1, 1, 0, -1, -1, 0, -1, 1, 0]),
+            3
+          ),
+          color: new THREE.InstancedBufferAttribute(
+            new Float32Array([1, 0, 1, 1, 1, 1, 0, 1]),
+            4
+          ),
+          quat: new THREE.InstancedBufferAttribute(
+            new Float32Array([0, 0, 0, 1, 0, 0, 0, 1]),
+            4
+          ),
+          scale: new THREE.InstancedBufferAttribute(
+            new Float32Array([1, 1, 1, 2, 0.5, 0.5]),
+            3
+          ),
+          center: new THREE.InstancedBufferAttribute(
+            new Float32Array([0, 0, 0, 2, 0, 0]),
+            3
+          ),
         },
       };
 
-      return { rawShaderMaterialData, instancedBufferGeometryData };
+      return {
+        rawShaderMaterialData,
+        instancedBufferGeometryData,
+      };
     }
   );
+
+  useFrame((state, _delta, _xrFrame) => {
+    // TODO FIXME Not sure about state.camera.modelViewMatrix here
+    // const viewProj = multiply4(projectionMatrix, actualViewMatrix);
+    const viewProj = state.camera.projectionMatrix
+      .clone()
+      .multiply(state.camera.modelViewMatrix);
+    worker.postMessage({ view: viewProj });
+  });
+
+  useEffect(() => {
+    const loadModel = async () => {
+      const url = new URL('https://antimatter15.com/splat-data/train.splat');
+      const req = await fetch(url, {
+        mode: 'cors',
+        credentials: 'omit',
+      });
+      if (
+        req.status != 200 ||
+        req.body == null ||
+        req.headers == null ||
+        req.headers.get('content-length') == null
+      ) {
+        throw new Error(req.status + ' Unable to load ' + req.url);
+      }
+      const rowLength = 3 * 4 + 3 * 4 + 4 + 4;
+      const reader = req.body.getReader();
+      let splatData = new Uint8Array(
+        parseInt(req.headers.get('content-length')!)
+      );
+      // const downsample = splatData.length / rowLength > 500000 ? 2 : 1;
+      // console.log(splatData.length / rowLength, downsample);
+
+      let vertexCount = 0;
+      let lastVertexCount = -1;
+
+      let bytesRead = 0;
+      let stopLoading = false;
+
+      worker.onmessage = (e) => {
+        if (e.data.buffer) {
+          splatData = new Uint8Array(e.data.buffer);
+          const blob = new Blob([splatData.buffer], {
+            type: 'application/octet-stream',
+          });
+          const link = document.createElement('a');
+          link.download = 'model.splat';
+          link.href = URL.createObjectURL(blob);
+          document.body.appendChild(link);
+          link.click();
+        } else {
+          let { quat, scale, center, color } = e.data;
+          vertexCount = quat.length / 4;
+          instancedBufferGeometryData.attributes!.quat.array.set(quat);
+          instancedBufferGeometryData.attributes!.scale.array.set(scale);
+          instancedBufferGeometryData.attributes!.center.array.set(center);
+          instancedBufferGeometryData.attributes!.color.array.set(color);
+        }
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done || stopLoading) break;
+
+        splatData.set(value, bytesRead);
+        bytesRead += value.length;
+
+        if (vertexCount > lastVertexCount) {
+          worker.postMessage({
+            buffer: splatData.buffer,
+            vertexCount: Math.floor(bytesRead / rowLength),
+          });
+          lastVertexCount = vertexCount;
+        }
+      }
+      if (!stopLoading) {
+        worker.postMessage({
+          buffer: splatData.buffer,
+          vertexCount: Math.floor(bytesRead / rowLength),
+        });
+      }
+    };
+    loadModel();
+  }, []);
 
   return (
     <mesh ref={ref}>
