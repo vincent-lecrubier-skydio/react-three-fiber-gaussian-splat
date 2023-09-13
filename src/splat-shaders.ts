@@ -54,7 +54,13 @@ vec3 compute_cov2d(vec3 center, vec3 scale, vec4 rot){
 
 void main () {
     vec4 camspace = viewMatrix * vec4(center, 1);
-    vec4 pos2d = projectionMatrix * mat4(1,0,0,0,0,-1,0,0,0,0,1,0,0,0,0,1) * camspace;
+    
+    // // Original version: Why multiply y by -1?
+    // vec4 pos2d = projectionMatrix * mat4(1,0,0,0,0,-1,0,0,0,0,1,0,0,0,0,1) * camspace;
+
+    // Vincent customization
+    // Good
+    vec4 pos2d = projectionMatrix * mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1) * camspace;
 
     vec3 cov2d = compute_cov2d(center, scale, quat);
     float det = cov2d.x * cov2d.z - cov2d.y * cov2d.y;
@@ -86,7 +92,15 @@ uniform vec2 focal;
 
 void main () {    
 	vec2 d = (vCenter - 2.0 * (gl_FragCoord.xy/viewport - vec2(0.5, 0.5))) * viewport * 0.5;
-	float power = -0.5 * (vConic.x * d.x * d.x + vConic.z * d.y * d.y) - vConic.y * d.x * d.y;
+    
+    // // Original version: Why multiply color by alpha? 
+	// float power = -0.5 * (vConic.x * d.x * d.x + vConic.z * d.y * d.y) - vConic.y * d.x * d.y;
+
+    // Vincent customization
+    // Good
+	float power = -0.5 * (vConic.x * d.x * d.x + vConic.z * d.y * d.y) + vConic.y * d.x * d.y;
+
+
 	if (power > 0.0) discard;
 	float alpha = min(0.99, vColor.a * exp(power));
 	if(alpha < 0.02) discard;
@@ -96,6 +110,7 @@ void main () {
     gl_FragColor = vec4(alpha * vColor.rgb, alpha);
 
     // // Vincent customization
+    // // Bad don't do that
     // gl_FragColor = vec4(vColor.rgb, alpha);
 }
 `;
