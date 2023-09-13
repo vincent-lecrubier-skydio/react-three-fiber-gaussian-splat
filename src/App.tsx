@@ -1,24 +1,27 @@
-// import { OrbitControls } from '@react-three/drei';
-// import { Canvas } from '@react-three/fiber';
+// import { useEffect } from 'react';
+import { OrbitControls } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
+import { Box } from './box';
+import { Splat } from './splat-object';
 
-import { useEffect } from 'react';
-import { main } from './splat';
+// import { main } from './splat';
 
 function App() {
-  useEffect(() => {
-    main().catch((err) => {
-      console.log(err);
-    });
-  }, []);
+  // useEffect(() => {
+  //   main().catch((err) => {
+  //     console.log(err);
+  //   });
+  // }, []);
   return (
-    <div>Ok</div>
-    // <Canvas className="h-full w-full bg-pink-500">
-    //   <OrbitControls />
-    //   <ambientLight />
-    //   <pointLight position={[10, 10, 10]} />
-    //   <Box position={[-1.2, 0, 0]} />
-    //   <Box position={[1.2, 0, 0]} />
-    // </Canvas>
+    // <div>Ok</div>
+    <Canvas className="h-full w-full bg-black">
+      <OrbitControls />
+      <ambientLight />
+      <pointLight position={[10, 10, 10]} />
+      <Box position={[-1, 0, 0]} />
+      <Box position={[1, 0, 0]} />
+      <Splat />
+    </Canvas>
   );
 }
 
