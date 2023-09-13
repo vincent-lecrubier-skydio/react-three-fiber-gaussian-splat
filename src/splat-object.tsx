@@ -179,7 +179,7 @@ export function Splat() {
   );
 
   return (
-    <mesh ref={ref}>
+    <mesh ref={ref} renderOrder={10}>
       <instancedBufferGeometry
         key={instanceCount}
         instanceCount={instanceCount}
@@ -227,7 +227,25 @@ export function Splat() {
           count={instanceCount}
         />
       </instancedBufferGeometry>
-      <rawShaderMaterial
+      {/* <rawShaderMaterial
+        uniforms={uniforms}
+        fragmentShader={fragmentShaderSource}
+        vertexShader={vertexShaderSource}
+        depthTest={false}
+        depthWrite={false}
+        transparent={true}
+        blending={THREE.CustomBlending}
+
+        blendSrc={THREE.OneMinusDstAlphaFactor}
+        blendSrcAlpha={THREE.OneMinusDstAlphaFactor}
+        
+        blendDst={THREE.OneFactor}
+        blendDstAlpha={THREE.OneFactor}
+
+        blendEquation={THREE.AddEquation}
+        blendEquationAlpha={THREE.AddEquation}
+      /> */}
+      {/* <rawShaderMaterial
         uniforms={uniforms}
         fragmentShader={fragmentShaderSource}
         vertexShader={vertexShaderSource}
@@ -241,7 +259,7 @@ export function Splat() {
         blendDst={THREE.OneFactor}
         blendSrcAlpha={THREE.OneMinusDstAlphaFactor}
         blendDstAlpha={THREE.OneFactor}
-      />
+      /> */}
       {/* <rawShaderMaterial
         uniforms={uniforms}
         fragmentShader={fragmentShaderSource}
@@ -252,6 +270,22 @@ export function Splat() {
         transparent={true}
         alphaToCoverage={true}
       /> */}
+      <rawShaderMaterial
+        uniforms={uniforms}
+        fragmentShader={fragmentShaderSource}
+        vertexShader={vertexShaderSource}
+        depthTest={true}
+        depthWrite={false}
+        transparent={false}
+
+        // blending={THREE.CustomBlending}
+        // blendSrc={THREE.OneMinusDstAlphaFactor}
+        // blendSrcAlpha={THREE.OneMinusDstAlphaFactor}
+        // blendDst={THREE.OneFactor}
+        // blendDstAlpha={THREE.OneFactor}
+        // blendEquation={THREE.AddEquation}
+        // blendEquationAlpha={THREE.AddEquation}
+      />
     </mesh>
   );
 }

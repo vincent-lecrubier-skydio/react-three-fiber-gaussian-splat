@@ -18,9 +18,13 @@ export function Box(props) {
       onClick={(event) => setActive(!active)}
       onPointerOver={(event) => setHover(true)}
       onPointerOut={(event) => setHover(false)}
+      renderOrder={5}
     >
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={hovered ? '#0000ff' : '#00ffff'} />
+      <meshStandardMaterial
+        color={hovered ? '#0000ff' : '#00ffff'}
+        transparent={false}
+      />
     </mesh>
   );
 }
