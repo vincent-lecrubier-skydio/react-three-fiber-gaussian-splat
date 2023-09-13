@@ -107,10 +107,10 @@ void main () {
 
     // Original version: Why multiply color by alpha? 
     // Answer: It's for the custom blending
-    gl_FragColor = vec4(alpha * vColor.rgb, alpha);
+    //gl_FragColor = vec4(alpha * vColor.rgb, alpha);
 
     // // Vincent customization
     // // Bad don't do that
-    // gl_FragColor = vec4(vColor.rgb, alpha);
+     gl_FragColor = vec4(vColor.rgb, alpha);
 }
 `;

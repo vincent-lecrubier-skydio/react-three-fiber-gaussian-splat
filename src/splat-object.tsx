@@ -46,25 +46,28 @@ export function Splat() {
         fragmentShader: fragmentShaderSource,
         vertexShader: vertexShaderSource,
 
-        // Original Version
-        // Customize blending
-        depthTest: false,
-        depthWrite: false,
-        transparent: true,
-        blending: THREE.CustomBlending,
-        blendEquation: THREE.AddEquation,
-        blendEquationAlpha: THREE.AddEquation,
-        blendSrc: THREE.OneMinusDstAlphaFactor,
-        blendDst: THREE.OneFactor,
-        blendSrcAlpha: THREE.OneMinusDstAlphaFactor,
-        blendDstAlpha: THREE.OneFactor,
-
-        // // Vincent customization
-        // // No customization, use defaults
-        // blending: THREE.NormalBlending,
-        // depthTest: true,
-        // depthWrite: true,
+        // // Original Version
+        // // Specific correct blending mode, but does not interact with ThreeJS depth
+        // // Use in conjunction with the Original version of gl_FragColor in the fragment shader
+        // depthTest: false,
+        // depthWrite: false,
         // transparent: true,
+        // blending: THREE.CustomBlending,
+        // blendEquation: THREE.AddEquation,
+        // blendEquationAlpha: THREE.AddEquation,
+        // blendSrc: THREE.OneMinusDstAlphaFactor,
+        // blendDst: THREE.OneFactor,
+        // blendSrcAlpha: THREE.OneMinusDstAlphaFactor,
+        // blendDstAlpha: THREE.OneFactor,
+
+        // Vincent customization
+        // No customization, use defaults
+        // // Use in conjunction with the Vincent customization of gl_FragColor in the fragment shader
+        blending: THREE.NormalBlending,
+        depthTest: true,
+        depthWrite: true,
+        transparent: true,
+        alphaToCoverage: true,
       };
 
       const position = new THREE.BufferAttribute(
