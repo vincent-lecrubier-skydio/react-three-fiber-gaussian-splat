@@ -10,8 +10,6 @@ import {
   useThree,
 } from '@react-three/fiber';
 
-const worker = new SplatSortWorker();
-
 const computeFocalLengths = (size: Size, camera: THREE.Camera) => {
   if (!(camera instanceof THREE.PerspectiveCamera)) {
     throw new Error('The provided camera is not a THREE.PerspectiveCamera');
@@ -47,6 +45,8 @@ const FocalUniform = ({
 export function Splat() {
   const ref = useRef(null);
 
+  const [worker] = useState(() => new SplatSortWorker());
+
   const { size, camera, viewport } = useThree();
 
   const [uniforms, setUniforms] = useState({
@@ -70,150 +70,102 @@ export function Splat() {
     center: new Float32Array([0, 0, 0, 2, 0, 0]),
   });
 
-  // useFrame((state, _delta, _xrFrame) => {
-  //   // TODO FIXME Not sure about state.camera.modelViewMatrix here
-  //   // const viewProj = multiply4(projectionMatrix, actualViewMatrix);
-  //   // worker.postMessage({
-  //   //   view: [
-  //   //     0.47, 0.04, 0.88, 0, -0.11, 0.99, 0.02, 0, -0.88, -0.11, 0.47, 0, 0.07,
-  //   //     0.03, 6.55, 1,
-  //   //   ],
-  //   // });
+  useFrame((state, _delta, _xrFrame) => {
+    // TODO FIXME Not sure about state.camera.modelViewMatrix here
+    // const viewProj = multiply4(projectionMatrix, actualViewMatrix);
+    // worker.postMessage({
+    //   view: [
+    //     0.47, 0.04, 0.88, 0, -0.11, 0.99, 0.02, 0, -0.88, -0.11, 0.47, 0, 0.07,
+    //     0.03, 6.55, 1,
+    //   ],
+    // });
 
-  //   const mesh = ref.current as unknown as THREE.Mesh;
-  //   const camera = state.camera;
-  //   const viewProj = new THREE.Matrix4()
-  //     .multiply(camera.projectionMatrix)
-  //     .multiply(camera.matrixWorldInverse)
-  //     .multiply(mesh.matrixWorld);
-  //   worker.postMessage({ view: viewProj.elements });
-  // });
-
-  // useEffect(() => {
-  //   const loadModel = async () => {
-  //     const url = new URL('https://antimatter15.com/splat-data/train.splat');
-  //     const req = await fetch(url, {
-  //       mode: 'cors',
-  //       credentials: 'omit',
-  //     });
-  //     if (
-  //       req.status != 200 ||
-  //       req.body == null ||
-  //       req.headers == null ||
-  //       req.headers.get('content-length') == null
-  //     ) {
-  //       throw new Error(req.status + ' Unable to load ' + req.url);
-  //     }
-  //     const rowLength = 3 * 4 + 3 * 4 + 4 + 4;
-  //     const reader = req.body.getReader();
-  //     let splatData = new Uint8Array(
-  //       parseInt(req.headers.get('content-length')!)
-  //     );
-  //     let vertexCount = 0;
-  //     let lastVertexCount = -1;
-  //     let bytesRead = 0;
-  //     let stopLoading = false;
-  //     // worker.onmessage = (e) => {
-  //     //   const mesh = ref.current as unknown as THREE.Mesh;
-  //     //   const geometry = mesh.geometry as THREE.InstancedBufferGeometry;
-
-  //     //   // let { quat, scale, center, color } = e.data;
-  //     //   // // vertexCount = quat.length / 4;
-  //     //   // if (geometry.getAttribute('quat').array.length !== quat.length) {
-  //     //   //   console.log('RESIZEEEE TO ', quat.length);
-  //     //   //   geometry.setAttribute('quat', new THREE.BufferAttribute(quat, 4));
-  //     //   //   geometry.setAttribute('color', new THREE.BufferAttribute(color, 4));
-  //     //   //   geometry.setAttribute('scale', new THREE.BufferAttribute(scale, 3));
-  //     //   //   geometry.setAttribute('center', new THREE.BufferAttribute(center, 3));
-  //     //   //   geometry.setDrawRange(0, vertexCount);
-  //     //   // } else {
-  //     //   //   geometry.getAttribute('quat').array.set(quat);
-  //     //   //   geometry.getAttribute('color').array.set(color);
-  //     //   //   geometry.getAttribute('scale').array.set(scale);
-  //     //   //   geometry.getAttribute('center').array.set(center);
-  //     //   // }
-  //     //   // geometry.getAttribute('quat').needsUpdate = true;
-  //     //   // geometry.getAttribute('color').needsUpdate = true;
-  //     //   // geometry.getAttribute('scale').needsUpdate = true;
-  //     //   // geometry.getAttribute('center').needsUpdate = true;
-
-  //     //   console.log('OOOOOO');
-  //     //   vertexCount = 4;
-  //     //   geometry.setAttribute(
-  //     //     'quat',
-  //     //     new THREE.InstancedBufferAttribute(
-  //     //       new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
-  //     //       4
-  //     //     )
-  //     //   );
-  //     //   geometry.setAttribute(
-  //     //     'color',
-  //     //     new THREE.InstancedBufferAttribute(
-  //     //       new Float32Array([1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1]),
-  //     //       4
-  //     //     )
-  //     //   );
-  //     //   geometry.setAttribute(
-  //     //     'scale',
-  //     //     new THREE.InstancedBufferAttribute(
-  //     //       new Float32Array([1, 1, 1, 2, 0.5, 0.5, 0.5, 2, 2, 0.5, 0.5, 0.5]),
-  //     //       3
-  //     //     )
-  //     //   );
-  //     //   geometry.setAttribute(
-  //     //     'center',
-  //     //     new THREE.InstancedBufferAttribute(
-  //     //       new Float32Array([0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2]),
-  //     //       3
-  //     //     )
-  //     //   );
-  //     //   geometry.instanceCount = vertexCount;
-  //     //   geometry.getAttribute('quat').needsUpdate = true;
-  //     //   geometry.getAttribute('color').needsUpdate = true;
-  //     //   geometry.getAttribute('scale').needsUpdate = true;
-  //     //   geometry.getAttribute('center').needsUpdate = true;
-  //     // };
-  //     // while (true) {
-  //     //   const { done, value } = await reader.read();
-  //     //   if (done || stopLoading) break;
-  //     //   splatData.set(value, bytesRead);
-  //     //   bytesRead += value.length;
-  //     //   if (vertexCount > lastVertexCount) {
-  //     //     worker.postMessage({
-  //     //       buffer: splatData.buffer,
-  //     //       vertexCount: Math.floor(bytesRead / rowLength),
-  //     //     });
-  //     //     lastVertexCount = vertexCount;
-  //     //   }
-  //     // }
-  //     // if (!stopLoading) {
-  //     //   worker.postMessage({
-  //     //     buffer: splatData.buffer,
-  //     //     vertexCount: Math.floor(bytesRead / rowLength),
-  //     //   });
-  //     // }
-  //   };
-  //   loadModel();
-  // }, []);
+    const mesh = ref.current as unknown as THREE.Mesh;
+    const camera = state.camera;
+    const viewProj = new THREE.Matrix4()
+      .multiply(camera.projectionMatrix)
+      .multiply(camera.matrixWorldInverse)
+      .multiply(mesh.matrixWorld);
+    worker.postMessage({ view: viewProj.elements });
+  });
 
   useEffect(() => {
-    setTimeout(() => {
-      // console.log(buffers);
-      setBuffers({
-        ...buffers,
-        color: new Float32Array([
-          1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1,
-        ]),
-        quat: new Float32Array([
-          0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-        ]),
-        scale: new Float32Array([
-          1, 1, 1, 2, 0.5, 0.5, 0.5, 2, 2, 0.5, 0.5, 0.5,
-        ]),
-        center: new Float32Array([0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2]),
+    worker.onmessage = (e) => {
+      console.log(e);
+      let { quat, scale, center, color } = e.data;
+      setBuffers((buffers) => ({ ...buffers, quat, scale, center, color }));
+    };
+    return () => {
+      worker.onmessage = null;
+    };
+  });
+
+  useEffect(() => {
+    const loadModel = async () => {
+      const url = new URL('https://antimatter15.com/splat-data/train.splat');
+      const req = await fetch(url, {
+        mode: 'cors',
+        credentials: 'omit',
       });
-    }, 1000);
+      if (
+        req.status != 200 ||
+        req.body == null ||
+        req.headers == null ||
+        req.headers.get('content-length') == null
+      ) {
+        throw new Error(req.status + ' Unable to load ' + req.url);
+      }
+      const rowLength = 3 * 4 + 3 * 4 + 4 + 4;
+      const reader = req.body.getReader();
+      let splatData = new Uint8Array(
+        parseInt(req.headers.get('content-length')!)
+      );
+      let vertexCount = 0;
+      let lastVertexCount = -1;
+      let bytesRead = 0;
+      let stopLoading = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done || stopLoading) break;
+        splatData.set(value, bytesRead);
+        bytesRead += value.length;
+        if (vertexCount > lastVertexCount) {
+          worker.postMessage({
+            buffer: splatData.buffer,
+            vertexCount: Math.floor(bytesRead / rowLength),
+          });
+          lastVertexCount = vertexCount;
+        }
+      }
+      if (!stopLoading) {
+        worker.postMessage({
+          buffer: splatData.buffer,
+          vertexCount: Math.floor(bytesRead / rowLength),
+        });
+      }
+    };
+    loadModel();
   }, []);
+
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     // console.log(buffers);
+  //     setBuffers({
+  //       ...buffers,
+  //       color: new Float32Array([
+  //         1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1,
+  //       ]),
+  //       quat: new Float32Array([
+  //         0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+  //       ]),
+  //       scale: new Float32Array([
+  //         1, 1, 1, 2, 0.5, 0.5, 0.5, 2, 2, 0.5, 0.5, 0.5,
+  //       ]),
+  //       center: new Float32Array([0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2]),
+  //     });
+  //   }, 1000);
+  // }, []);
 
   const instanceCount = buffers.quat.length / 4;
   console.log(instanceCount);
