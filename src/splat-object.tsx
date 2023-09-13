@@ -89,19 +89,23 @@ export function Splat() {
             3
           ),
           color: new THREE.InstancedBufferAttribute(
-            new Float32Array([1, 0, 1, 1, 1, 1, 0, 1]),
+            // new Float32Array([1, 0, 1, 1, 1, 1, 0, 1]),
+            new Float32Array([1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1]),
             4
           ),
           quat: new THREE.InstancedBufferAttribute(
-            new Float32Array([0, 0, 0, 1, 0, 0, 0, 1]),
+            // new Float32Array([0, 0, 0, 1, 0, 0, 0, 1]),
+            new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
             4
           ),
           scale: new THREE.InstancedBufferAttribute(
-            new Float32Array([1, 1, 1, 2, 0.5, 0.5]),
+            // new Float32Array([1, 1, 1, 2, 0.5, 0.5]),
+            new Float32Array([1, 1, 1, 2, 0.5, 0.5, 0.5, 2, 2, 0.5, 0.5, 0.5]),
             3
           ),
           center: new THREE.InstancedBufferAttribute(
-            new Float32Array([0, 0, 0, 2, 0, 0]),
+            // new Float32Array([0, 0, 0, 2, 0, 0]),
+            new Float32Array([0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2]),
             3
           ),
         },
@@ -117,11 +121,18 @@ export function Splat() {
   useFrame((state, _delta, _xrFrame) => {
     // TODO FIXME Not sure about state.camera.modelViewMatrix here
     // const viewProj = multiply4(projectionMatrix, actualViewMatrix);
+    // worker.postMessage({
+    //   view: [
+    //     0.47, 0.04, 0.88, 0, -0.11, 0.99, 0.02, 0, -0.88, -0.11, 0.47, 0, 0.07,
+    //     0.03, 6.55, 1,
+    //   ],
+    // });
+
     const mesh = ref.current as unknown as THREE.Mesh;
     const camera = state.camera;
     const viewProj = new THREE.Matrix4()
       .multiply(camera.projectionMatrix)
-      // .multiply(camera.matrixWorldInverse)
+      .multiply(camera.matrixWorldInverse)
       .multiply(mesh.matrixWorld);
     worker.postMessage({ view: viewProj.elements });
   });
@@ -151,56 +162,63 @@ export function Splat() {
       let bytesRead = 0;
       let stopLoading = false;
       worker.onmessage = (e) => {
-        // console.log('ok');
         let { quat, scale, center, color } = e.data;
         vertexCount = quat.length / 4;
         const mesh = ref.current as unknown as THREE.Mesh;
         const geometry = mesh.geometry;
+        // if (geometry.getAttribute('quat').array.length !== quat.length) {
+        //   console.log('RESIZEEEE TO ', quat.length);
+        //   geometry.setAttribute('quat', new THREE.BufferAttribute(quat, 4));
+        //   geometry.setAttribute('color', new THREE.BufferAttribute(color, 4));
+        //   geometry.setAttribute('scale', new THREE.BufferAttribute(scale, 3));
+        //   geometry.setAttribute('center', new THREE.BufferAttribute(center, 3));
+        //   geometry.setDrawRange(0, vertexCount);
+        // } else {
+        //   geometry.getAttribute('quat').array.set(quat);
+        //   geometry.getAttribute('color').array.set(color);
+        //   geometry.getAttribute('scale').array.set(scale);
+        //   geometry.getAttribute('center').array.set(center);
+        // }
+        // geometry.getAttribute('quat').needsUpdate = true;
+        // geometry.getAttribute('color').needsUpdate = true;
+        // geometry.getAttribute('scale').needsUpdate = true;
+        // geometry.getAttribute('center').needsUpdate = true;
 
-        // console.log(center);
+        vertexCount = 4;
+        geometry.setAttribute(
+          'quat',
+          new THREE.InstancedBufferAttribute(
+            new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
+            4
+          )
+        );
+        geometry.setAttribute(
+          'color',
+          new THREE.InstancedBufferAttribute(
+            new Float32Array([1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1]),
+            4
+          )
+        );
+        geometry.setAttribute(
+          'scale',
+          new THREE.InstancedBufferAttribute(
+            new Float32Array([1, 1, 1, 2, 0.5, 0.5, 0.5, 2, 2, 0.5, 0.5, 0.5]),
+            3
+          )
+        );
+        geometry.setAttribute(
+          'center',
+          new THREE.InstancedBufferAttribute(
+            new Float32Array([0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2]),
+            3
+          )
+        );
+        geometry.setDrawRange(0, vertexCount * 2);
 
-        if (geometry.getAttribute('quat').array.length !== quat.length) {
-          geometry.setAttribute('quat', new THREE.BufferAttribute(quat, 4));
-          geometry.setAttribute('color', new THREE.BufferAttribute(color, 4));
-          geometry.setAttribute('scale', new THREE.BufferAttribute(scale, 3));
-          geometry.setAttribute('center', new THREE.BufferAttribute(center, 3));
-        } else {
-          geometry.getAttribute('quat').array.set(quat);
-          geometry.getAttribute('color').array.set(color);
-          geometry.getAttribute('scale').array.set(scale);
-          geometry.getAttribute('center').array.set(center);
-        }
-        geometry.getAttribute('quat').needsUpdate = true;
-        geometry.getAttribute('color').needsUpdate = true;
-        geometry.getAttribute('scale').needsUpdate = true;
-        geometry.getAttribute('center').needsUpdate = true;
-
-        // console.log(
-        //   quat,
-        //   (ref.current as unknown as THREE.Mesh).geometry.attributes.quat.array
-        // );
-
-        // (ref.current as unknown as THREE.Mesh).geometry.setAttribute(
-        //   'quat',
-        //   quat
-        // );
-        // (ref.current as unknown as THREE.Mesh).geometry.setAttribute(
-        //   'scale',
-        //   scale
-        // );
-        // (ref.current as unknown as THREE.Mesh).geometry.setAttribute(
-        //   'center',
-        //   center
-        // );
-        // (ref.current as unknown as THREE.Mesh).geometry.setAttribute(
-        //   'color',
-        //   color
-        // );
-
-        // instancedBufferGeometryData.attributes!.quat.set(quat);
-        // instancedBufferGeometryData.attributes!.scale.set(scale);
-        // instancedBufferGeometryData.attributes!.center.set(center);
-        // instancedBufferGeometryData.attributes!.color.set(color);
+        // geometry.getAttribute('quat').needsUpdate = true;
+        // geometry.getAttribute('color').needsUpdate = true;
+        // geometry.getAttribute('scale').needsUpdate = true;
+        // geometry.getAttribute('center').needsUpdate = true;
       };
       while (true) {
         const { done, value } = await reader.read();
