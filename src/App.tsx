@@ -5,7 +5,7 @@ import { Splat } from './splat-object';
 
 function App() {
   return (
-    <Canvas className="h-full w-full bg-black">
+    <Canvas className="h-full w-full bg-black" gl={{antialias:false}}>
       <StatsGl />
       <OrbitControls />
       <ambientLight />

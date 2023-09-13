@@ -29,7 +29,7 @@ let viewProj: ViewProj;
 const rowLength = 3 * 4 + 3 * 4 + 4 + 4;
 
 const runSort = (viewProj: ViewProj) => {
-  console.log([viewProj[2], viewProj[6], viewProj[10]]);
+  // console.log([viewProj[2], viewProj[6], viewProj[10]]);
   if (!buffer) return;
 
   // console.time("sort");
@@ -47,7 +47,7 @@ const runSort = (viewProj: ViewProj) => {
       viewProj[10] * f_buffer[8 * j + 2];
     depthIndex[j] = j;
   }
-  depthIndex.sort((a, b) => depthList[a] - depthList[b]);
+  depthIndex.sort((b, a) => depthList[a] - depthList[b]);
 
   const quat = new Float32Array(4 * vertexCount);
   const scale = new Float32Array(3 * vertexCount);

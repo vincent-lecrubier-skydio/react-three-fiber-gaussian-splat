@@ -91,7 +91,6 @@ export function Splat() {
 
   useEffect(() => {
     worker.onmessage = (e) => {
-      console.log(e);
       let { quat, scale, center, color } = e.data;
       setBuffers((buffers) => ({ ...buffers, quat, scale, center, color }));
     };
@@ -168,7 +167,6 @@ export function Splat() {
   // }, []);
 
   const instanceCount = buffers.quat.length / 4;
-  console.log(instanceCount);
 
   const update = useCallback(
     (self: THREE.InstancedBufferAttribute | THREE.BufferAttribute) => {
@@ -179,7 +177,7 @@ export function Splat() {
   );
 
   return (
-    <mesh ref={ref} renderOrder={10}>
+    <mesh ref={ref} renderOrder={10} rotation={[Math.PI, 0, 0]}>
       <instancedBufferGeometry
         key={instanceCount}
         instanceCount={instanceCount}
@@ -276,7 +274,7 @@ export function Splat() {
         vertexShader={vertexShaderSource}
         depthTest={true}
         depthWrite={false}
-        transparent={false}
+        transparent={true}
 
         // blending={THREE.CustomBlending}
         // blendSrc={THREE.OneMinusDstAlphaFactor}
