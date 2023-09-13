@@ -47,7 +47,8 @@ export function Splat() {
         vertexShader: vertexShaderSource,
 
         // // Original Version
-        // // Specific correct blending mode, but does not interact with ThreeJS depth
+        // // Good: Specific correct blending mode
+        // // Bad: Does not interact with ThreeJS depth
         // // Use in conjunction with the Original version of gl_FragColor in the fragment shader
         // depthTest: false,
         // depthWrite: false,
@@ -61,8 +62,9 @@ export function Splat() {
         // blendDstAlpha: THREE.OneFactor,
 
         // Vincent customization
-        // No customization, use defaults
-        // // Use in conjunction with the Vincent customization of gl_FragColor in the fragment shader
+        // Good: Use alpha to coverage to manage transparency nicely with ThreeJS
+        // Bad: Might be a performance hit? And blending artifacts due to using MSAA for transparency
+        // Use in conjunction with the Vincent customization of gl_FragColor in the fragment shader
         blending: THREE.NormalBlending,
         depthTest: true,
         depthWrite: true,
