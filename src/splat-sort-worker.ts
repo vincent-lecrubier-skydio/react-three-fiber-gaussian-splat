@@ -29,6 +29,7 @@ let viewProj: ViewProj;
 const rowLength = 3 * 4 + 3 * 4 + 4 + 4;
 
 const runSort = (viewProj: ViewProj) => {
+  console.log([viewProj[2], viewProj[6], viewProj[10]]);
   if (!buffer) return;
 
   // console.time("sort");
