@@ -27,7 +27,7 @@ function computeFocalLengths(size: Size, camera: THREE.Camera) {
 export function Splat() {
   const ref = useRef();
 
-  const { size, camera } = useThree();
+  const { size, camera, viewport } = useThree();
 
   const [{ rawShaderMaterialData, instancedBufferGeometryData }] = useState(
     () => {
@@ -38,7 +38,12 @@ export function Splat() {
         NodeProps<THREE.RawShaderMaterial, [THREE.ShaderMaterialParameters]>
       > = {
         uniforms: {
-          viewport: { value: new THREE.Vector2(size.width, size.height) },
+          viewport: {
+            value: new THREE.Vector2(
+              size.width * viewport.dpr,
+              size.height * viewport.dpr
+            ),
+          },
           focal: { value: computeFocalLengths(size, camera) },
         },
         fragmentShader: fragmentShaderSource,
@@ -47,6 +52,8 @@ export function Splat() {
         depthWrite: true,
         transparent: true,
 
+        // // Original Version
+        // // Customize blending
         // blending: THREE.CustomBlending,
         // blendEquation: THREE.AddEquation,
         // blendEquationAlpha: THREE.AddEquation,
@@ -54,6 +61,9 @@ export function Splat() {
         // blendDst: THREE.OneFactor,
         // blendSrcAlpha: THREE.OneMinusDstAlphaFactor,
         // blendDstAlpha: THREE.OneFactor,
+
+        // Vincent customization
+        // No customization, use defaults
       };
 
       const position = new THREE.BufferAttribute(

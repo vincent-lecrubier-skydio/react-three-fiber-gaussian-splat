@@ -91,8 +91,9 @@ void main () {
 	float alpha = min(0.99, vColor.a * exp(power));
 	if(alpha < 0.02) discard;
 
-  // Original version: Why multiply color by alpha?
-	// gl_FragColor = vec4(alpha * vColor.rgb, alpha);
+  // // Original version: Why multiply color by alpha? 
+  // // Answer: It's for the custom blending
+  // gl_FragColor = vec4(alpha * vColor.rgb, alpha);
 
   // Vincent customization
   gl_FragColor = vec4(vColor.rgb, alpha);
