@@ -145,11 +145,10 @@ let viewMatrix = defaultViewMatrix;
 
 export async function main() {
   console.log('MAINN');
-  let carousel = true;
+
   const params = new URLSearchParams(location.search);
   try {
     viewMatrix = JSON.parse(decodeURIComponent(location.hash.slice(1)));
-    carousel = false;
   } catch (err) {}
   const url = new URL(
     params.get('url') || 'train.splat',
@@ -220,92 +219,7 @@ export async function main() {
   gl.linkProgram(program);
   gl.useProgram(program);
 
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-    console.error(gl.getProgramInfoLog(program));
-
-  gl.disable(gl.DEPTH_TEST); // Disable depth testing
-
-  // Enable blending
-  gl.enable(gl.BLEND);
-
-  // Set blending function
-  gl.blendFuncSeparate(
-    gl.ONE_MINUS_DST_ALPHA,
-    gl.ONE,
-    gl.ONE_MINUS_DST_ALPHA,
-    gl.ONE
-  );
-
-  // Set blending equation
-  gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
-
-  ////////////////////////////////////////////////////////////////////////////////////
-
-  // projection
-  const u_projection = gl.getUniformLocation(program, 'projection');
-  gl.uniformMatrix4fv(u_projection, false, projectionMatrix);
-
-  // viewport
-  const u_viewport = gl.getUniformLocation(program, 'viewport');
-  gl.uniform2fv(u_viewport, new Float32Array([canvas.width, canvas.height]));
-
-  // focal
-  const u_focal = gl.getUniformLocation(program, 'focal');
-  gl.uniform2fv(u_focal, new Float32Array([camera.fx / 2, camera.fy / 2]));
-
-  // view
-  const u_view = gl.getUniformLocation(program, 'view');
-  gl.uniformMatrix4fv(u_view, false, viewMatrix);
-
-  // positions
-  const triangleVertices = new Float32Array([1, -1, 1, 1, -1, 1, -1, -1]);
-  const vertexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, triangleVertices, gl.STATIC_DRAW);
-  const a_position = gl.getAttribLocation(program, 'position');
-  gl.enableVertexAttribArray(a_position);
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0);
-
-  // center
-  const centerBuffer = gl.createBuffer();
-  // gl.bindBuffer(gl.ARRAY_BUFFER, centerBuffer);
-  // gl.bufferData(gl.ARRAY_BUFFER, center, gl.STATIC_DRAW);
-  const a_center = gl.getAttribLocation(program, 'center');
-  gl.enableVertexAttribArray(a_center);
-  gl.bindBuffer(gl.ARRAY_BUFFER, centerBuffer);
-  gl.vertexAttribPointer(a_center, 3, gl.FLOAT, false, 0, 0);
-  ext.vertexAttribDivisorANGLE(a_center, 1); // Use the extension here
-
-  // color
-  const colorBuffer = gl.createBuffer();
-  // gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-  // gl.bufferData(gl.ARRAY_BUFFER, color, gl.STATIC_DRAW);
-  const a_color = gl.getAttribLocation(program, 'color');
-  gl.enableVertexAttribArray(a_color);
-  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-  gl.vertexAttribPointer(a_color, 4, gl.FLOAT, false, 0, 0);
-  ext.vertexAttribDivisorANGLE(a_color, 1); // Use the extension here
-
-  // quat
-  const quatBuffer = gl.createBuffer();
-  // gl.bindBuffer(gl.ARRAY_BUFFER, quatBuffer);
-  // gl.bufferData(gl.ARRAY_BUFFER, quat, gl.STATIC_DRAW);
-  const a_quat = gl.getAttribLocation(program, 'quat');
-  gl.enableVertexAttribArray(a_quat);
-  gl.bindBuffer(gl.ARRAY_BUFFER, quatBuffer);
-  gl.vertexAttribPointer(a_quat, 4, gl.FLOAT, false, 0, 0);
-  ext.vertexAttribDivisorANGLE(a_quat, 1); // Use the extension here
-
-  // scale
-  const scaleBuffer = gl.createBuffer();
-  // gl.bindBuffer(gl.ARRAY_BUFFER, scaleBuffer);
-  // gl.bufferData(gl.ARRAY_BUFFER, scale, gl.STATIC_DRAW);
-  const a_scale = gl.getAttribLocation(program, 'scale');
-  gl.enableVertexAttribArray(a_scale);
-  gl.bindBuffer(gl.ARRAY_BUFFER, scaleBuffer);
-  gl.vertexAttribPointer(a_scale, 3, gl.FLOAT, false, 0, 0);
-  ext.vertexAttribDivisorANGLE(a_scale, 1); // Use the extension here
+  /////////////////////////////////////////////////////
 
   worker.onmessage = (e) => {
     if (e.data.buffer) {
@@ -350,16 +264,6 @@ export async function main() {
 
     // inv[13] = preY;
     viewMatrix = invert4(inv);
-
-    if (carousel) {
-      let inv = invert4(defaultViewMatrix);
-
-      const t = Math.sin((Date.now() - start) / 5000);
-      inv = translate4(inv, 2.5 * t, 0, 10 * (1 - Math.cos(t)));
-      inv = rotate4(inv, -0.4 * t, 0, 1, 0);
-
-      viewMatrix = invert4(inv);
-    }
 
     let actualViewMatrix = viewMatrix;
 

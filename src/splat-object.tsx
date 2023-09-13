@@ -14,13 +14,10 @@ function computeFocalLengths(size: Size, camera: THREE.Camera) {
   const fovRad = THREE.MathUtils.degToRad(camera.fov);
   // Calculate focal length for y-direction
   const fy = size.height / (2 * Math.tan(fovRad / 2));
-
   // Calculate horizontal field of view in radians
   const fovXRad = 2 * Math.atan(Math.tan(fovRad / 2) * camera.aspect);
-
   // Calculate focal length for x-direction
   const fx = size.width / (2 * Math.tan(fovXRad / 2));
-
   return new THREE.Vector2(fx, fy);
 }
 
@@ -48,22 +45,26 @@ export function Splat() {
         },
         fragmentShader: fragmentShaderSource,
         vertexShader: vertexShaderSource,
-        depthTest: true,
-        depthWrite: true,
+
+        // Original Version
+        // Customize blending
+        depthTest: false,
+        depthWrite: false,
         transparent: true,
+        blending: THREE.CustomBlending,
+        blendEquation: THREE.AddEquation,
+        blendEquationAlpha: THREE.AddEquation,
+        blendSrc: THREE.OneMinusDstAlphaFactor,
+        blendDst: THREE.OneFactor,
+        blendSrcAlpha: THREE.OneMinusDstAlphaFactor,
+        blendDstAlpha: THREE.OneFactor,
 
-        // // Original Version
-        // // Customize blending
-        // blending: THREE.CustomBlending,
-        // blendEquation: THREE.AddEquation,
-        // blendEquationAlpha: THREE.AddEquation,
-        // blendSrc: THREE.OneMinusDstAlphaFactor,
-        // blendDst: THREE.OneFactor,
-        // blendSrcAlpha: THREE.OneMinusDstAlphaFactor,
-        // blendDstAlpha: THREE.OneFactor,
-
-        // Vincent customization
-        // No customization, use defaults
+        // // Vincent customization
+        // // No customization, use defaults
+        // blending: THREE.NormalBlending,
+        // depthTest: true,
+        // depthWrite: true,
+        // transparent: true,
       };
 
       const position = new THREE.BufferAttribute(
@@ -77,19 +78,19 @@ export function Splat() {
       );
 
       const color = new THREE.InstancedBufferAttribute(
-        new Float32Array([1, 0, 1, 1]),
+        new Float32Array([1, 0, 1, 1, 1, 1, 0, 1]),
         4
       );
       const quat = new THREE.InstancedBufferAttribute(
-        new Float32Array([0, 0, 0, 1]),
+        new Float32Array([0, 0, 0, 1, 0, 0, 0, 1]),
         4
       );
       const scale = new THREE.InstancedBufferAttribute(
-        new Float32Array([1, 1, 1]),
+        new Float32Array([1, 1, 1, 2, 0.5, 0.5]),
         3
       );
       const center = new THREE.InstancedBufferAttribute(
-        new Float32Array([0, 0, 0]),
+        new Float32Array([0, 0, 0, 2, 0, 0]),
         3
       );
 
