@@ -8,7 +8,7 @@ attribute vec4 quat;
 attribute vec3 scale;
 attribute vec3 center;
 
-uniform mat4 modelViewMatrix;
+uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 uniform vec2 focal;
 uniform vec2 viewport;
@@ -38,7 +38,7 @@ mat3 compute_cov3d(vec3 scale, vec4 rot) {
 
 vec3 compute_cov2d(vec3 center, vec3 scale, vec4 rot){
     mat3 Vrk = compute_cov3d(scale, rot);
-    vec4 t = modelViewMatrix * vec4(center, 1.0);
+    vec4 t = viewMatrix * vec4(center, 1.0);
     vec2 lims = 1.3 * 0.5 * viewport / focal;
     t.xy = min(lims, max(-lims, t.xy / t.z)) * t.z;
     mat3 J = mat3(
@@ -46,14 +46,14 @@ vec3 compute_cov2d(vec3 center, vec3 scale, vec4 rot){
         0., focal.y / t.z, -(focal.y * t.y) / (t.z * t.z), 
         0., 0., 0.
     );
-    mat3 W = transpose(mat3(modelViewMatrix));
+    mat3 W = transpose(mat3(viewMatrix));
     mat3 T = W * J;
     mat3 cov = transpose(T) * transpose(Vrk) * T;
     return vec3(cov[0][0] + 0.3, cov[0][1], cov[1][1] + 0.3);
 }
 
 void main () {
-    vec4 camspace = modelViewMatrix * vec4(center, 1);
+    vec4 camspace = viewMatrix * vec4(center, 1);
     vec4 pos2d = projectionMatrix * mat4(1,0,0,0,0,-1,0,0,0,0,1,0,0,0,0,1) * camspace;
 
     vec3 cov2d = compute_cov2d(center, scale, quat);
