@@ -4,14 +4,14 @@ import SplatSortWorker from './splat-sort-worker?worker';
 import { fragmentShaderSource, vertexShaderSource } from './splat-shaders';
 import { Size, useFrame, useThree } from '@react-three/fiber';
 
-const computeFocalLengths = (size: Size, camera: THREE.Camera) => {
+const computeFocalLengths = (size: Size, camera: THREE.Camera, dpr: number) => {
   if (!(camera instanceof THREE.PerspectiveCamera)) {
     throw new Error('The provided camera is not a THREE.PerspectiveCamera');
   }
   const fovRad = THREE.MathUtils.degToRad(camera.fov);
   const fovXRad = 2 * Math.atan(Math.tan(fovRad / 2) * camera.aspect);
-  const fy = size.height / (2 * Math.tan(fovRad / 2));
-  const fx = size.width / (2 * Math.tan(fovXRad / 2));
+  const fy = (dpr * size.height) / (2 * Math.tan(fovRad / 2));
+  const fx = (dpr * size.width) / (2 * Math.tan(fovXRad / 2));
   return new THREE.Vector2(fx, fy);
 };
 
@@ -34,7 +34,7 @@ export function Splat({
       ),
     },
     focal: {
-      value: computeFocalLengths(size, camera),
+      value: computeFocalLengths(size, camera, viewport.dpr),
     },
   });
 
