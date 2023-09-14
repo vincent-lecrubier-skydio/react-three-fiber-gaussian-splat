@@ -81,7 +81,9 @@ export function Splat({
   // Receive sorted buffers from sorting worker
   useEffect(() => {
     worker.onmessage = (e) => {
-      const { quat, scale, center, color } = e.data;
+      const { quat, scale, center, color /*viewProj*/ } = e.data;
+      // We could store viewProj here
+      // lastProj = viewProj
       setBuffers((buffers) => ({ ...buffers, quat, scale, center, color }));
     };
     return () => {
