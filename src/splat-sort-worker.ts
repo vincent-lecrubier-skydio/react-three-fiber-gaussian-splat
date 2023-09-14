@@ -1,23 +1,6 @@
 /// <reference lib="WebWorker" />
 
-type ViewProj = [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number
-];
+type ViewProj = number[];
 let buffer: ArrayBuffer;
 let vertexCount = 0;
 let viewProj: ViewProj;
@@ -29,7 +12,6 @@ let viewProj: ViewProj;
 const rowLength = 3 * 4 + 3 * 4 + 4 + 4;
 
 const runSort = (viewProj: ViewProj) => {
-  // console.log([viewProj[2], viewProj[6], viewProj[10]]);
   if (!buffer) return;
 
   // console.time("sort");
