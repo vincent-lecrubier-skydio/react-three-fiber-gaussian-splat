@@ -23,57 +23,36 @@ export function Splat({
 }: {
   url: string;
 }) {
+  // Allow direct access to the mesh
   const ref = useRef<THREE.Mesh>(null);
 
+  // Web worker doing the splat sorting
   const [worker] = useState(() => new SplatSortWorker());
 
-  const { size, camera, viewport } = useThree();
+  // Listen to screen and viewport
+  const {
+    size: { width, height },
+    camera: { fov, aspect },
+    viewport: { dpr },
+  } = useThree() as any;
 
-  const [uniforms, setUniforms] = useState({
+  // Initialize uniforms
+  const [uniforms] = useState({
     viewport: {
-      value: new THREE.Vector2(
-        size.width * viewport.dpr,
-        size.height * viewport.dpr
-      ),
+      value: new THREE.Vector2(width * dpr, height * dpr),
     },
     focal: {
-      value: computeFocalLengths(
-        size.width,
-        size.height,
-        (camera as THREE.PerspectiveCamera).fov,
-        (camera as THREE.PerspectiveCamera).aspect,
-        viewport.dpr
-      ),
+      value: computeFocalLengths(width, height, fov, aspect, dpr),
     },
   });
 
+  // Update uniforms when window changes
   useEffect(() => {
-    console.log('oooo');
-    setUniforms({
-      viewport: {
-        value: new THREE.Vector2(
-          size.width * viewport.dpr,
-          size.height * viewport.dpr
-        ),
-      },
-      focal: {
-        value: computeFocalLengths(
-          size.width,
-          size.height,
-          (camera as THREE.PerspectiveCamera).fov,
-          (camera as THREE.PerspectiveCamera).aspect,
-          viewport.dpr
-        ),
-      },
-    });
-  }, [
-    size.width,
-    size.height,
-    (camera as THREE.PerspectiveCamera).fov,
-    (camera as THREE.PerspectiveCamera).aspect,
-    viewport.dpr,
-  ]);
+    uniforms.focal.value = computeFocalLengths(width, height, fov, aspect, dpr);
+    uniforms.viewport.value = new THREE.Vector2(width * dpr, height * dpr);
+  }, [width, height, fov, aspect, dpr]);
 
+  // Initialize attribute buffers
   const [buffers, setBuffers] = useState({
     index: new Uint16Array([0, 1, 2, 2, 3, 0]),
     position: new Float32Array([1, -1, 0, 1, 1, 0, -1, -1, 0, -1, 1, 0]),
@@ -83,6 +62,7 @@ export function Splat({
     center: new Float32Array([0, 0, 0, 2, 0, 0]),
   });
 
+  // Send current camera pose to splat sorting worker
   useFrame((state, _delta, _xrFrame) => {
     const mesh = ref.current;
     if (mesh == null) {
@@ -96,6 +76,7 @@ export function Splat({
     worker.postMessage({ view: viewProj.elements });
   });
 
+  // Receive sorted buffers from sorting worker
   useEffect(() => {
     worker.onmessage = (e) => {
       const { quat, scale, center, color } = e.data;
@@ -106,6 +87,7 @@ export function Splat({
     };
   });
 
+  // Load splat file from url
   useEffect(() => {
     let stopLoading = false;
     const loadModel = async () => {
@@ -156,14 +138,16 @@ export function Splat({
     };
   }, [url]);
 
-  const instanceCount = buffers.quat.length / 4;
-
+  // Signal to Three that attributes change when their buffer change
   const update = useCallback(
     (self: THREE.InstancedBufferAttribute | THREE.BufferAttribute) => {
       self.needsUpdate = true;
     },
     []
   );
+
+  // Count number of instances to feed where needed
+  const instanceCount = buffers.quat.length / 4;
 
   return (
     <mesh ref={ref} renderOrder={10} rotation={[Math.PI, 0, 0]}>
