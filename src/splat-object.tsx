@@ -20,8 +20,10 @@ const computeFocalLengths = (
 
 export function Splat({
   url = 'https://antimatter15.com/splat-data/train.splat',
+  maxSplats = Infinity,
 }: {
-  url: string;
+  url?: string;
+  maxSplats?: number;
 }) {
   // Allow direct access to the mesh
   const ref = useRef<THREE.Mesh>(null);
@@ -73,7 +75,7 @@ export function Splat({
       .multiply(camera.projectionMatrix)
       .multiply(camera.matrixWorldInverse)
       .multiply(mesh.matrixWorld);
-    worker.postMessage({ view: viewProj.elements });
+    worker.postMessage({ view: viewProj.elements, maxSplats });
   });
 
   // Receive sorted buffers from sorting worker
@@ -147,7 +149,7 @@ export function Splat({
   );
 
   // Count number of instances to feed where needed
-  const instanceCount = buffers.quat.length / 4;
+  const instanceCount = Math.min(buffers.quat.length / 4, maxSplats);
 
   return (
     <mesh ref={ref} renderOrder={10} rotation={[Math.PI, 0, 0]}>

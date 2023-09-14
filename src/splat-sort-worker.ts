@@ -1,6 +1,7 @@
 /// <reference lib="WebWorker" />
 
 type ViewProj = number[];
+let maxSplats: number = Infinity;
 let buffer: ArrayBuffer;
 let vertexCount = 0;
 let viewProj: ViewProj;
@@ -15,12 +16,15 @@ const runSort = (viewProj: ViewProj) => {
   if (!buffer) return;
 
   // console.time("sort");
+
+  const effectiveVertexCount = Math.min(vertexCount, maxSplats);
+
   const f_buffer = new Float32Array(buffer);
   const u_buffer = new Uint8Array(buffer);
 
-  const depthList = new Float32Array(vertexCount);
-  const depthIndex = new Uint32Array(vertexCount);
-  for (let j = 0; j < vertexCount; j++) {
+  const depthList = new Float32Array(effectiveVertexCount);
+  const depthIndex = new Uint32Array(effectiveVertexCount);
+  for (let j = 0; j < effectiveVertexCount; j++) {
     // For some reason dividing by wumbo actually causes
     // problems, so this is the unnormalized camera space homo
     depthList[j] =
@@ -31,12 +35,12 @@ const runSort = (viewProj: ViewProj) => {
   }
   depthIndex.sort((b, a) => depthList[a] - depthList[b]);
 
-  const quat = new Float32Array(4 * vertexCount);
-  const scale = new Float32Array(3 * vertexCount);
-  const center = new Float32Array(3 * vertexCount);
-  const color = new Float32Array(4 * vertexCount);
+  const quat = new Float32Array(4 * effectiveVertexCount);
+  const scale = new Float32Array(3 * effectiveVertexCount);
+  const center = new Float32Array(3 * effectiveVertexCount);
+  const color = new Float32Array(4 * effectiveVertexCount);
 
-  for (let j = 0; j < vertexCount; j++) {
+  for (let j = 0; j < effectiveVertexCount; j++) {
     const i = depthIndex[j];
 
     quat[4 * j + 0] = (u_buffer[32 * i + 28 + 0] - 128) / 128;
@@ -91,6 +95,7 @@ self.onmessage = (e) => {
     vertexCount = e.data.vertexCount;
   } else if (e.data.view) {
     viewProj = e.data.view;
+    maxSplats = e.data.maxSplats;
     throttledSort();
   }
 };
