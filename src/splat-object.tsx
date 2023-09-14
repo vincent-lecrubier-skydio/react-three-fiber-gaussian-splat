@@ -178,26 +178,6 @@ export function Splat({
           count={instanceCount}
         />
       </instancedBufferGeometry>
-      {/* Original version */}
-      {/* <rawShaderMaterial
-        uniforms={uniforms}
-        fragmentShader={fragmentShaderSource}
-        vertexShader={vertexShaderSource}
-        depthTest={false}
-        depthWrite={false}
-        transparent={true}
-        blending={THREE.CustomBlending}
-
-        blendSrc={THREE.OneMinusDstAlphaFactor}
-        blendSrcAlpha={THREE.OneMinusDstAlphaFactor}
-        
-        blendDst={THREE.OneFactor}
-        blendDstAlpha={THREE.OneFactor}
-
-        blendEquation={THREE.AddEquation}
-        blendEquationAlpha={THREE.AddEquation}
-      /> */}
-      {/* Vincent Customization */}
       <rawShaderMaterial
         uniforms={uniforms}
         fragmentShader={fragmentShaderSource}

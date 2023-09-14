@@ -18,7 +18,6 @@ varying vec3 vConic;
 varying vec2 vCenter;
 varying vec2 vPosition;
 
-
 mat3 transpose(mat3 m) { return mat3(m[0][0], m[1][0], m[2][0], m[0][1], m[1][1], m[2][1], m[0][2], m[1][2], m[2][2]); }
 
 mat3 compute_cov3d(vec3 scale, vec4 rot) {
@@ -55,13 +54,6 @@ vec3 compute_cov2d(vec3 center, vec3 scale, vec4 rot){
 void main () {
     vec4 camspace = modelViewMatrix * vec4(center, 1);
     
-    // // Original version: Why multiply y by -1?
-    // vec4 pos2d = projectionMatrix * mat4(1,0,0,0,0,-1,0,0,0,0,1,0,0,0,0,1) * camspace;
-
-    // Vincent customization
-    // Good
-    // vec4 pos2d = projectionMatrix * mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1) * camspace;
-
     vec4 pos2d = projectionMatrix  * camspace;
 
     vec3 cov2d = compute_cov2d(center, scale, quat);
@@ -95,23 +87,12 @@ uniform vec2 focal;
 void main () {    
 	vec2 d = (vCenter - 2.0 * (gl_FragCoord.xy/viewport - vec2(0.5, 0.5))) * viewport * 0.5;
     
-    // // Original version: Why multiply color by alpha? 
-	// float power = -0.5 * (vConic.x * d.x * d.x + vConic.z * d.y * d.y) - vConic.y * d.x * d.y;
-
-    // Vincent customization
-    // Good
 	float power = -0.5 * (vConic.x * d.x * d.x + vConic.z * d.y * d.y) + vConic.y * d.x * d.y;
 
 	if (power > 0.0) discard;
 	float alpha = min(0.99, vColor.a * exp(power));
 	if(alpha < 0.02) discard;
 
-    // Original version: Why multiply color by alpha? 
-    // Answer: It's for the custom blending
-    // gl_FragColor = vec4(alpha * vColor.rgb, alpha);
-
-    // // Vincent customization
-    // // Bad don't do that
     gl_FragColor = vec4(vColor.rgb, alpha);
 }
 `;

@@ -4,21 +4,21 @@ import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { FlakesTexture } from 'three-stdlib';
 
-export const Suzi = ({ objref: ref, ...props }) => {
+export const Suzi = ({ objref, ...props }: any) => {
   const { scene, materials } = useGLTF(
     'https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/suzanne-high-poly/model.gltf'
   );
   useLayoutEffect(() => {
     scene.traverse((obj) => {
-      if (!obj.isMesh) return;
+      if (!(obj as THREE.Mesh).isMesh) return;
       obj.receiveShadow = true;
       obj.castShadow = true;
-      ref.current = obj;
+      objref.current = obj;
     });
     materials.default.color.set('orange');
     materials.default.roughness = 0;
     materials.default.normalMap = new THREE.CanvasTexture(
-      new FlakesTexture(),
+      new FlakesTexture() as TexImageSource,
       THREE.UVMapping,
       THREE.RepeatWrapping,
       THREE.RepeatWrapping
@@ -31,10 +31,11 @@ export const Suzi = ({ objref: ref, ...props }) => {
 };
 
 export const OrbitingSuzi = () => {
-  const groupRef = useRef(null);
-  const meshRef = useRef(null);
+  const groupRef = useRef<THREE.Group>(null);
+  const meshRef = useRef<THREE.Mesh>(null);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
+    if (!groupRef.current || !meshRef.current) return;
     groupRef.current.rotateY(delta * 0.5);
     meshRef.current.rotateY(delta * 5);
   });
