@@ -2,13 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import SplatSortWorker from './splat-sort-worker?worker';
 import { fragmentShaderSource, vertexShaderSource } from './splat-shaders';
-import {
-  NodeProps,
-  Overwrite,
-  Size,
-  useFrame,
-  useThree,
-} from '@react-three/fiber';
+import { Size, useFrame, useThree } from '@react-three/fiber';
 
 const computeFocalLengths = (size: Size, camera: THREE.Camera) => {
   if (!(camera instanceof THREE.PerspectiveCamera)) {
@@ -21,29 +15,12 @@ const computeFocalLengths = (size: Size, camera: THREE.Camera) => {
   return new THREE.Vector2(fx, fy);
 };
 
-const FocalUniform = ({
-  size,
-  camera,
-  ...props
+export function Splat({
+  url = 'https://antimatter15.com/splat-data/train.splat',
 }: {
-  size: Size;
-  camera: THREE.Camera;
-} & Overwrite<
-  Partial<THREE.Vector2>,
-  NodeProps<THREE.Vector2, typeof THREE.Vector2>
->) => {
-  if (!(camera instanceof THREE.PerspectiveCamera)) {
-    throw new Error('The provided camera is not a THREE.PerspectiveCamera');
-  }
-  const fovRad = THREE.MathUtils.degToRad(camera.fov);
-  const fovXRad = 2 * Math.atan(Math.tan(fovRad / 2) * camera.aspect);
-  const fy = size.height / (2 * Math.tan(fovRad / 2));
-  const fx = size.width / (2 * Math.tan(fovXRad / 2));
-  return <vector2 {...props} x={fx} y={fy} />;
-};
-
-export function Splat() {
-  const ref = useRef(null);
+  url: string;
+}) {
+  const ref = useRef<THREE.Mesh>(null);
 
   const [worker] = useState(() => new SplatSortWorker());
 
@@ -71,16 +48,10 @@ export function Splat() {
   });
 
   useFrame((state, _delta, _xrFrame) => {
-    // TODO FIXME Not sure about state.camera.modelViewMatrix here
-    // const viewProj = multiply4(projectionMatrix, actualViewMatrix);
-    // worker.postMessage({
-    //   view: [
-    //     0.47, 0.04, 0.88, 0, -0.11, 0.99, 0.02, 0, -0.88, -0.11, 0.47, 0, 0.07,
-    //     0.03, 6.55, 1,
-    //   ],
-    // });
-
-    const mesh = ref.current as unknown as THREE.Mesh;
+    const mesh = ref.current;
+    if (mesh == null) {
+      return;
+    }
     const camera = state.camera;
     const viewProj = new THREE.Matrix4()
       .multiply(camera.projectionMatrix)
@@ -91,7 +62,7 @@ export function Splat() {
 
   useEffect(() => {
     worker.onmessage = (e) => {
-      let { quat, scale, center, color } = e.data;
+      const { quat, scale, center, color } = e.data;
       setBuffers((buffers) => ({ ...buffers, quat, scale, center, color }));
     };
     return () => {
@@ -100,8 +71,8 @@ export function Splat() {
   });
 
   useEffect(() => {
+    let stopLoading = false;
     const loadModel = async () => {
-      const url = new URL('https://antimatter15.com/splat-data/train.splat');
       const req = await fetch(url, {
         mode: 'cors',
         credentials: 'omit',
@@ -122,7 +93,6 @@ export function Splat() {
       let vertexCount = 0;
       let lastVertexCount = -1;
       let bytesRead = 0;
-      let stopLoading = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -145,33 +115,16 @@ export function Splat() {
       }
     };
     loadModel();
-  }, []);
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     // console.log(buffers);
-  //     setBuffers({
-  //       ...buffers,
-  //       color: new Float32Array([
-  //         1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1,
-  //       ]),
-  //       quat: new Float32Array([
-  //         0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-  //       ]),
-  //       scale: new Float32Array([
-  //         1, 1, 1, 2, 0.5, 0.5, 0.5, 2, 2, 0.5, 0.5, 0.5,
-  //       ]),
-  //       center: new Float32Array([0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2]),
-  //     });
-  //   }, 1000);
-  // }, []);
+    return () => {
+      stopLoading = true;
+    };
+  }, [url]);
 
   const instanceCount = buffers.quat.length / 4;
 
   const update = useCallback(
     (self: THREE.InstancedBufferAttribute | THREE.BufferAttribute) => {
       self.needsUpdate = true;
-      // self.parent?.computeBoundingSphere();
     },
     []
   );
@@ -225,6 +178,7 @@ export function Splat() {
           count={instanceCount}
         />
       </instancedBufferGeometry>
+      {/* Original version */}
       {/* <rawShaderMaterial
         uniforms={uniforms}
         fragmentShader={fragmentShaderSource}
@@ -243,31 +197,7 @@ export function Splat() {
         blendEquation={THREE.AddEquation}
         blendEquationAlpha={THREE.AddEquation}
       /> */}
-      {/* <rawShaderMaterial
-        uniforms={uniforms}
-        fragmentShader={fragmentShaderSource}
-        vertexShader={vertexShaderSource}
-        depthTest={false}
-        depthWrite={false}
-        transparent={true}
-        blending={THREE.CustomBlending}
-        blendEquation={THREE.AddEquation}
-        blendEquationAlpha={THREE.AddEquation}
-        blendSrc={THREE.OneMinusDstAlphaFactor}
-        blendDst={THREE.OneFactor}
-        blendSrcAlpha={THREE.OneMinusDstAlphaFactor}
-        blendDstAlpha={THREE.OneFactor}
-      /> */}
-      {/* <rawShaderMaterial
-        uniforms={uniforms}
-        fragmentShader={fragmentShaderSource}
-        vertexShader={vertexShaderSource}
-        blending={THREE.NormalBlending}
-        depthTest={true}
-        depthWrite={true}
-        transparent={true}
-        alphaToCoverage={true}
-      /> */}
+      {/* Vincent Customization */}
       <rawShaderMaterial
         uniforms={uniforms}
         fragmentShader={fragmentShaderSource}
@@ -275,14 +205,6 @@ export function Splat() {
         depthTest={true}
         depthWrite={false}
         transparent={true}
-
-        // blending={THREE.CustomBlending}
-        // blendSrc={THREE.OneMinusDstAlphaFactor}
-        // blendSrcAlpha={THREE.OneMinusDstAlphaFactor}
-        // blendDst={THREE.OneFactor}
-        // blendDstAlpha={THREE.OneFactor}
-        // blendEquation={THREE.AddEquation}
-        // blendEquationAlpha={THREE.AddEquation}
       />
     </mesh>
   );

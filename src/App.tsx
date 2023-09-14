@@ -5,8 +5,19 @@ import { Splat } from './splat-object';
 import { OrbitingSuzi } from './suzi';
 import { useControls } from 'leva';
 
+const urls = [
+  'https://antimatter15.com/splat-data/train.splat',
+  'https://antimatter15.com/splat-data/plush.splat',
+  'https://antimatter15.com/splat-data/truck.splat',
+  'https://antimatter15.com/splat-data/garden.splat',
+  'https://antimatter15.com/splat-data/treehill.splat',
+  'https://antimatter15.com/splat-data/stump.splat',
+  'https://antimatter15.com/splat-data/bicycle.splat',
+  'https://media.reshot.ai/models/nike_next/model.splat',
+];
+
 function App() {
-  useControls({ name: 'World', aNumber: 0 });
+  const { url } = useControls({ url: { label: 'Model URL', options: urls } });
   return (
     <Canvas className="h-full w-full bg-black" gl={{ antialias: false }}>
       <StatsGl />
@@ -17,7 +28,7 @@ function App() {
       <OrbitingSuzi />
 
       <group position={[0, 0, 0]}>
-        <Splat />
+        <Splat url={url} />
       </group>
       <Environment preset="city" />
     </Canvas>
