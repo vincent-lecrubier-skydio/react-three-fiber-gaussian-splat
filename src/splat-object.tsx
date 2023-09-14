@@ -2,16 +2,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import SplatSortWorker from './splat-sort-worker?worker';
 import { fragmentShaderSource, vertexShaderSource } from './splat-shaders';
-import { Size, useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 
-const computeFocalLengths = (size: Size, camera: THREE.Camera, dpr: number) => {
-  if (!(camera instanceof THREE.PerspectiveCamera)) {
-    throw new Error('The provided camera is not a THREE.PerspectiveCamera');
-  }
-  const fovRad = THREE.MathUtils.degToRad(camera.fov);
-  const fovXRad = 2 * Math.atan(Math.tan(fovRad / 2) * camera.aspect);
-  const fy = (dpr * size.height) / (2 * Math.tan(fovRad / 2));
-  const fx = (dpr * size.width) / (2 * Math.tan(fovXRad / 2));
+const computeFocalLengths = (
+  width: number,
+  height: number,
+  fov: number,
+  aspect: number,
+  dpr: number
+) => {
+  const fovRad = THREE.MathUtils.degToRad(fov);
+  const fovXRad = 2 * Math.atan(Math.tan(fovRad / 2) * aspect);
+  const fy = (dpr * height) / (2 * Math.tan(fovRad / 2));
+  const fx = (dpr * width) / (2 * Math.tan(fovXRad / 2));
   return new THREE.Vector2(fx, fy);
 };
 
@@ -34,9 +37,42 @@ export function Splat({
       ),
     },
     focal: {
-      value: computeFocalLengths(size, camera, viewport.dpr),
+      value: computeFocalLengths(
+        size.width,
+        size.height,
+        (camera as THREE.PerspectiveCamera).fov,
+        (camera as THREE.PerspectiveCamera).aspect,
+        viewport.dpr
+      ),
     },
   });
+
+  useEffect(() => {
+    console.log('oooo');
+    setUniforms({
+      viewport: {
+        value: new THREE.Vector2(
+          size.width * viewport.dpr,
+          size.height * viewport.dpr
+        ),
+      },
+      focal: {
+        value: computeFocalLengths(
+          size.width,
+          size.height,
+          (camera as THREE.PerspectiveCamera).fov,
+          (camera as THREE.PerspectiveCamera).aspect,
+          viewport.dpr
+        ),
+      },
+    });
+  }, [
+    size.width,
+    size.height,
+    (camera as THREE.PerspectiveCamera).fov,
+    (camera as THREE.PerspectiveCamera).aspect,
+    viewport.dpr,
+  ]);
 
   const [buffers, setBuffers] = useState({
     index: new Uint16Array([0, 1, 2, 2, 3, 0]),
