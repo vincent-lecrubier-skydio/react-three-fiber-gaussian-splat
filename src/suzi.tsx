@@ -3,14 +3,13 @@ import { useFrame } from '@react-three/fiber';
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { FlakesTexture } from 'three-stdlib';
+import url from './suzi.gltf';
 
 export const Suzi = ({ objref, ...props }: any) => {
-  const { scene, materials } = useGLTF(
-    'https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/suzanne-high-poly/model.gltf'
-  );
+  const { scene, materials } = useGLTF(url) as any;
   useLayoutEffect(() => {
-    scene.traverse((obj) => {
-      if (!(obj as THREE.Mesh).isMesh) return;
+    scene.traverse((obj: THREE.Mesh) => {
+      if (!obj.isMesh) return;
       obj.receiveShadow = true;
       obj.castShadow = true;
       objref.current = obj;

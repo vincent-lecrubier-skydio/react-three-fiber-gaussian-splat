@@ -22,6 +22,7 @@ function App() {
     <Canvas className="h-full w-full bg-black" gl={{ antialias: false }}>
       <StatsGl />
       <OrbitControls />
+      
       <Box position={[-1, 0, 0]} />
       <Box position={[1, 0, 0]} />
 
