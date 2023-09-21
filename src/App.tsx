@@ -14,8 +14,8 @@ import { Suspense, useState } from 'react';
 
 // import telco from "./telco.gltf";
 
-// import model30k from './model30k.splat';
 // import output from './output.splat';
+// import model30k from './model30k.splat';
 // import telco7k from './telco7k.splat';
 // import telco14k from './telco14k.splat';
 // import telco21k from './telco21k.splat';
@@ -40,6 +40,9 @@ const gltfUrls = [
 ] as const;
 
 const splatUrls = [
+
+  // output,
+
   // telco_2_42k,
   // telco_2_28k,
   // telco_2_21k,
@@ -58,8 +61,8 @@ const splatUrls = [
   // telco21k,
   // telco14k,
   // telco7k,
-  // output,
   // model30k,
+
   'https://antimatter15.com/splat-data/train.splat',
   'https://antimatter15.com/splat-data/plush.splat',
   'https://antimatter15.com/splat-data/truck.splat',
